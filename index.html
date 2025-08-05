@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wakandan Throne Battle</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            font-family: 'Courier New', monospace;
+            color: white;
+            overflow: hidden;
+        }
+        
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, #0f0f23, #1a1a2e);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .loading-title {
+            font-size: 4em;
+            color: #ff6b6b;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.7);
+            margin-bottom: 50px;
+            text-align: center;
+        }
+        
+        .character-selection {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            margin-bottom: 40px;
+            justify-content: center;
+            max-width: 1200px;
+        }
+        
+        .character-card {
+            background: rgba(0, 0, 0, 0.8);
+            border: 3px solid #4ecdc4;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 200px;
+            max-width: 250px;
+        }
+        
+        .character-card:hover {
+            border-color: #ff6b6b;
+            transform: translateY(-10px);
+            box-shadow: 0 10px 25px rgba(255, 107, 107, 0.3);
+        }
+        
+        .character-card.selected {
+            border-color: #ffa502;
+            background: rgba(255, 165, 2, 0.2);
+            transform: translateY(-5px);
+        }
+        
+        .character-card.loading {
+            border-color: #ccc;
+            opacity: 0.6;
+        }
+        
+        .character-image {
+            width: 120px;
+            height: 120px;
+            background: #333;
+            border: 2px solid #666;
+            border-radius: 10px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #ccc;
+            text-align: center;
+            overflow: hidden;
+        }
+        
+        .character-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        
+        .character-name {
+            font-size: 1.5em;
+            color: #4ecdc4;
+            margin-bottom: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .character-description {
+            font-size: 0.9em;
+            color: #ccc;
+            line-height: 1.4;
+        }
+        
+        .loading-status {
+            font-size: 0.8em;
+            color: #ffa502;
+            margin-top: 10px;
+        }
+        
+        .start-button {
+            background: linear-gradient(45deg, #ff6b6b, #ff5252);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        .start-button.enabled {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .start-button.enabled:hover {
+            background: linear-gradient(45deg, #ff5252, #ff4757);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+        
+        .error-message {
+            color: #ff4757;
+            background: rgba(255, 71, 87, 0.1);
+            border: 1px solid #ff4757;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px;
+            text-align: center;
+            max-width: 600px;
+        }
+        
+        .game-container {
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        
+        h1 {
+            color: #ff6b6b;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+        
+        #gameCanvas {
+            border: 3px solid #ff6b6b;
+            display: block;
+            margin: 20px auto;
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.3);
+            background: #000;
+        }
+        
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            border: 2px solid #ff6b6b;
+        }
+        
+        .player-info {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .vs-divider {
+            font-size: 2em;
+            color: #ff6b6b;
+            margin: 0 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .player-name {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            color: #4ecdc4;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .health-bar {
+            width: 250px;
+            height: 25px;
+            background: #333;
+            border: 2px solid #fff;
+            margin: 10px auto;
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff4757, #ffa502, #2ed573);
+            transition: width 0.3s ease;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .health-text {
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            border: 1px solid #4ecdc4;
+        }
+        
+        .control-section {
+            text-align: center;
+        }
+        
+        .control-section h3 {
+            color: #4ecdc4;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+        
+        .control-item {
+            margin: 8px 0;
+            font-size: 14px;
+            color: #ccc;
+        }
+        
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 40px;
+            border-radius: 15px;
+            border: 3px solid #ff6b6b;
+            display: none;
+            z-index: 1000;
+            text-align: center;
+        }
+        
+        .restart-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ff5252);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-family: inherit;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+        
+        .restart-btn:hover {
+            background: linear-gradient(45deg, #ff5252, #ff4757);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        
+        .loading-instruction {
+            color: #ccc;
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            max-width: 600px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-title">⚡ CHOOSE YOUR HERO ⚡</div>
+        <div class="loading-instruction">
+            Select your character to face Killmonger in the ultimate showdown!
+        </div>
+        
+        <div class="character-selection" id="characterSelection">
+            </div>
+        
+        <div id="errorMessage" class="error-message" style="display: none;">
+            Error loading characters. Please check your file structure.
+        </div>
+        
+        <button class="start-button" id="startButton" onclick="startGame()">FIGHT!</button>
+    </div>
+
+    <div class="game-container" id="gameContainer">
+        <h1>⚡ MARVEL STREET FIGHTER ⚡</h1>
+        
+        <div class="hud">
+            <div class="player-info">
+                <div class="player-name" id="playerName">HERO</div>
+                <div class="health-bar">
+                    <div class="health-fill" id="player1Health" style="width: 100%;"></div>
+                </div>
+                <div class="health-text" id="player1HealthText">100 HP</div>
+            </div>
+            
+            <div class="vs-divider">VS</div>
+            
+            <div class="player-info">
+                <div class="player-name">KILLMONGER</div>
+                <div class="health-bar">
+                    <div class="health-fill" id="player2Health" style="width: 100%;"></div>
+                </div>
+                <div class="health-text" id="player2HealthText">150 HP</div>
+            </div>
+        </div>
+        
+        <canvas id="gameCanvas" width="900" height="500"></canvas>
+        
+        <div class="game-over" id="gameOver">
+            <h2 id="winnerText">GAME OVER</h2>
+            <button class="restart-btn" onclick="restartGame()">REMATCH</button>
+            <button class="restart-btn" onclick="backToMenu()" style="margin-left: 10px;">CHANGE CHARACTER</button>
+        </div>
+        
+        <div class="controls">
+            <div class="control-section">
+                <h3 id="heroControlsTitle">🦅 HERO CONTROLS</h3>
+                <div class="control-item">← → - Move Left/Right</div>
+                <div class="control-item">↑ - Jump</div>
+                <div class="control-item">SPACE - Punch</div>
+            </div>
+            <div class="control-section">
+                <h3>👑 KILLMONGER</h3>
+                <div class="control-item">CPU Controlled</div>
+                <div class="control-item">150 HP - Boss Battle!</div>
+                <div class="control-item">ENHANCED COMBAT AI</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game variables
+        let selectedCharacter = null;
+        let characterSprites = {};
+        let killmongerSprites = {};
+        let backgroundImage = null;
+        let availableCharacters = [];
+        let loadingComplete = false;
+        let backgroundMusic = null;
+        
+        // Debug logging function (removed for clean release)
+        function debugLog(message, data = null) {
+            // Debug code removed
+        }
+        
+        // Character loading functions
+        async function loadCharacters() {
+            try {
+                // First, try to detect available characters
+                await detectCharacters();
+                
+                // Load Killmonger sprites
+                await loadKillmongerSprites();
+                
+                // Load background
+                await loadBackground();
+                
+                // Load and play background music
+                await loadBackgroundMusic();
+                
+                loadingComplete = true;
+                enableStartButton();
+                
+            } catch (error) {
+                console.error('Error loading game assets:', error);
+                showErrorMessage('Failed to load game assets. Please check your file structure.');
+            }
+        }
+        
+        async function detectCharacters() {
+            const commonCharacters = [
+                'spider_shaheezy', 'ironman', 'captain_america', 'thor', 'hulk', 
+                'black_widow', 'hawkeye', 'falcon', 'winter_soldier', 'ant_man',
+                'doctor_strange', 'scarlet_witch', 'vision', 'captain_marvel',
+                'black_panther', 'general_khan', 'character1', 'character2', 'character3'
+            ];
+            
+            const characterSelection = document.getElementById('characterSelection');
+            characterSelection.innerHTML = '<div style="color: #ffa502;">Loading characters...</div>';
+            
+            const extensions = ['.png', '.jpg', '.jpeg'];
+            const detectionPromises = [];
+            
+            for (const characterName of commonCharacters) {
+                detectionPromises.push((async () => {
+                    for (const ext of extensions) {
+                        try {
+                            const imgPath = `characters/${characterName}/base${ext}`;
+                            const testImg = new Image();
+                            
+                            await new Promise((resolve, reject) => {
+                                testImg.onload = () => resolve(true);
+                                testImg.onerror = () => reject(false);
+                                testImg.src = imgPath;
+                            });
+                            
+                            availableCharacters.push({ name: characterName, extension: ext });
+                            return true;
+                        } catch (error) {
+                            continue;
+                        }
+                    }
+                })());
+            }
+            
+            await Promise.all(detectionPromises.map(p => p.catch(() => {})));
+        
+            if (availableCharacters.length === 0) {
+                throw new Error('No characters found in characters/ directory. Make sure files exist and paths are correct.');
+            }
+            
+            await createCharacterCards();
+        }
+        
+        async function createCharacterCards() {
+            const characterSelection = document.getElementById('characterSelection');
+            characterSelection.innerHTML = '';
+            
+            const loadPromises = availableCharacters.map(character => {
+                const characterName = character.name || character;
+                const extension = character.extension || '.png';
+                
+                const card = document.createElement('div');
+                card.className = 'character-card loading';
+                card.setAttribute('data-character', characterName);
+                card.onclick = () => selectCharacter(characterName);
+                
+                const displayName = formatCharacterName(characterName);
+                
+                card.innerHTML = `
+                    <div class="character-image" id="char-img-${characterName}">
+                        Loading...
+                    </div>
+                    <div class="character-name">${displayName}</div>
+                    <div class="character-description">
+                        ${getCharacterDescription(characterName)}
+                    </div>
+                    <div class="loading-status" id="status-${characterName}">Loading sprites...</div>
+                `;
+                
+                characterSelection.appendChild(card);
+                
+                return loadCharacterSprites(characterName, extension);
+            });
+        
+            await Promise.all(loadPromises);
+        }
+        
+        function formatCharacterName(name) {
+            return name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+        
+        function getCharacterDescription(characterName) {
+            const descriptions = {
+                'spider_shaheezy': 'Peter Parker, your friendly neighborhood hero.<br>Web-slinging wall-crawler with spider-sense.',
+                'ironman': 'Tony Stark, genius billionaire inventor.<br>High-tech armor with repulsors and flight.',
+                'captain_america': 'Steve Rogers, the First Avenger.<br>Super soldier with vibranium shield.',
+                'thor': 'God of Thunder from Asgard.<br>Wields the mighty hammer Mjolnir.',
+                'hulk': 'Bruce Banner\'s gamma-powered alter ego.<br>Incredible strength when angry.',
+                'black_widow': 'Natasha Romanoff, master spy.<br>Expert in combat and espionage.',
+                'hawkeye': 'Clint Barton, master archer.<br>Never misses his target.',
+                'falcon': 'Sam Wilson, high-flying hero.<br>Military training with wing suit.',
+                'black_panther': 'T\'Challa, King of Wakanda.<br>Vibranium suit and enhanced abilities.',
+                'general_khan': 'Elite military commander.<br>Strategic genius and combat expert.',
+                'default': 'A powerful hero ready for battle.<br>Unique abilities and fighting style.'
+            };
+            
+            return descriptions[characterName] || descriptions['default'];
+        }
+        
+        async function loadCharacterSprites(characterName, extension = '.png') {
+            try {
+                characterSprites[characterName] = {};
+                const sprites = ['base', 'jump', 'punch'];
+                
+                const loadPromises = sprites.map(spriteName => {
+                    return new Promise((resolve, reject) => {
+                        const img = new Image();
+                        const imgPath = `characters/${characterName}/${spriteName}${extension}`;
+                        img.onload = () => {
+                            characterSprites[characterName][spriteName] = img;
+                            resolve();
+                        };
+                        img.onerror = (err) => {
+                            reject(new Error(`Failed to load ${spriteName}`));
+                        };
+                        img.src = imgPath;
+                    });
+                });
+        
+                await Promise.all(loadPromises);
+                
+                const charImg = document.getElementById(`char-img-${characterName}`);
+                const statusElement = document.getElementById(`status-${characterName}`);
+                const card = document.querySelector(`[data-character="${characterName}"]`);
+                
+                if (charImg && characterSprites[characterName].base) {
+                    charImg.innerHTML = `<img src="${characterSprites[characterName].base.src}" alt="${characterName}">`;
+                    statusElement.textContent = 'Ready to fight!';
+                    statusElement.style.color = '#2ed573';
+                    card.classList.remove('loading');
+                }
+                
+            } catch (error) {
+                console.error(`Error loading sprites for ${characterName}:`, error);
+                const statusElement = document.getElementById(`status-${characterName}`);
+                if (statusElement) {
+                    statusElement.textContent = 'Failed to load';
+                    statusElement.style.color = '#ff4757';
+                }
+            }
+        }
+        
+        async function loadKillmongerSprites() {
+            try {
+                debugLog('Loading Killmonger sprites...');
+                killmongerSprites = {};
+                const sprites = ['base', 'jump', 'punch'];
+                const extensions = ['.png', '.jpg', '.jpeg'];
+                
+                let workingExtension = null;
+                
+                for (const ext of extensions) {
+                    try {
+                        const testImg = new Image();
+                        const testPath = `killmonger/base${ext}`;
+                        await new Promise((resolve, reject) => {
+                            testImg.onload = () => {
+                                workingExtension = ext;
+                                resolve();
+                            };
+                            testImg.onerror = () => reject();
+                            testImg.src = testPath;
+                        });
+                        break;
+                    } catch (e) {
+                        continue;
+                    }
+                }
+                
+                if (!workingExtension) {
+                    debugLog('No Killmonger sprites found, will use fallback graphics');
+                    return;
+                }
+                
+                const loadPromises = sprites.map(spriteName => {
+                    return new Promise(resolve => {
+                        const img = new Image();
+                        const imgPath = `killmonger/${spriteName}${workingExtension}`;
+                        img.onload = () => {
+                            killmongerSprites[spriteName] = img;
+                            resolve();
+                        };
+                        img.onerror = () => {
+                            resolve(); 
+                        };
+                        img.src = imgPath;
+                    });
+                });
+        
+                await Promise.all(loadPromises);
+                
+                debugLog('Killmonger sprites loaded:', Object.keys(killmongerSprites));
+            } catch (error) {
+                debugLog('Error loading Killmonger sprites, using fallback graphics:', error.message);
+            }
+        }
+        
+        async function loadBackground() {
+            try {
+                debugLog('Loading background image...');
+                const extensions = ['.jpg', '.jpeg', '.png'];
+                
+                for (const ext of extensions) {
+                    try {
+                        const img = new Image();
+                        const imgPath = `background/background${ext}`;
+                        await new Promise((resolve, reject) => {
+                            img.onload = () => {
+                                backgroundImage = img;
+                                resolve();
+                            };
+                            img.onerror = () => reject();
+                            img.src = imgPath;
+                        });
+                        return;
+                    } catch (e) {
+                        continue;
+                    }
+                }
+                
+                debugLog('No background image found, using default gradient');
+            } catch (error) {
+                debugLog('Error loading background, using default:', error.message);
+            }
+        }
+        
+        async function loadBackgroundMusic() {
+            try {
+                debugLog('Loading background music...');
+                
+                // Try to load the music file
+                backgroundMusic = new Audio('throne_room_fight.mp3');
+                backgroundMusic.loop = true;
+                backgroundMusic.volume = 0.5; // Set to 50% volume
+                
+                // Test if the file exists and can be loaded
+                await new Promise((resolve, reject) => {
+                    backgroundMusic.oncanplaythrough = () => {
+                        debugLog('Background music loaded successfully');
+                        resolve();
+                    };
+                    backgroundMusic.onerror = () => {
+                        debugLog('Background music file not found or cannot be loaded');
+                        backgroundMusic = null;
+                        resolve(); // Don't reject, just continue without music
+                    };
+                    
+                    // Start loading the audio
+                    backgroundMusic.load();
+                });
+                
+                // Auto-play the music if it loaded successfully
+                if (backgroundMusic) {
+                    try {
+                        await backgroundMusic.play();
+                        debugLog('Background music started playing');
+                    } catch (playError) {
+                        debugLog('Auto-play blocked by browser. Music will start on user interaction.');
+                        // Many browsers block auto-play, so we'll try to play on first user interaction
+                        document.addEventListener('click', () => {
+                            if (backgroundMusic && backgroundMusic.paused) {
+                                backgroundMusic.play().catch(e => console.log('Could not play music:', e));
+                            }
+                        }, { once: true });
+                    }
+                }
+                
+            } catch (error) {
+                debugLog('Error loading background music:', error.message);
+                backgroundMusic = null;
+            }
+        }
+        
+        function selectCharacter(characterName) {
+            if (!characterSprites[characterName] || Object.keys(characterSprites[characterName]).length < 3) {
+                alert('Character sprites are still loading. Please wait...');
+                return;
+            }
+            
+            document.querySelectorAll('.character-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            document.querySelector(`[data-character="${characterName}"]`).classList.add('selected');
+            selectedCharacter = characterName;
+            
+            enableStartButton();
+        }
+        
+        function enableStartButton() {
+            if (loadingComplete && selectedCharacter) {
+                const startBtn = document.getElementById('startButton');
+                startBtn.classList.add('enabled');
+            }
+        }
+        
+        function showErrorMessage(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+        
+        function startGame() {
+            if (!selectedCharacter || !loadingComplete) {
+                alert('Please select a character first!');
+                return;
+            }
+            
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('gameContainer').style.display = 'block';
+            
+            const displayName = formatCharacterName(selectedCharacter);
+            document.getElementById('playerName').textContent = displayName;
+            document.getElementById('heroControlsTitle').innerHTML = 
+                `🦅 ${displayName.toUpperCase()} CONTROLS`;
+            
+            initializeGame();
+        }
+        
+        function backToMenu() {
+            document.getElementById('gameContainer').style.display = 'none';
+            document.getElementById('loadingScreen').style.display = 'flex';
+            document.getElementById('gameOver').style.display = 'none';
+        }
+        
+        window.addEventListener('load', () => {
+            loadCharacters();
+        });
+        
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Enhanced game constants for ultra-aggressive Killmonger
+        const GRAVITY = 0.95;           
+        const JUMP_POWER = -25;        
+        const GROUND_Y = 400;
+        const MOVE_SPEED = 15;          
+        const PUNCH_DAMAGE = 3;
+        const CHARACTER_SCALE = 2.0;
+        
+        // KILLMONGER ENHANCEMENT CONSTANTS
+        const KILLMONGER_SPEED_MULTIPLIER = 0.1;  // 80% faster movement
+        const KILLMONGER_PUNCH_DAMAGE = 5;        // 50% more damage
+        const KILLMONGER_REACTION_TIME = 30;        // Much faster reactions
+        const KILLMONGER_AGGRESSION = 0.5;        // 85% chance to attack when in range
+        const KILLMONGER_COMBO_CHANCE = 0;       // 70% chance for combo attacks
+        
+        let gameRunning = true;
+        let gameFrame = 0;
+        const keys = {};
+        
+        function drawBackground() {
+            if (backgroundImage) {
+                ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else {
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, '#1a1a2e');
+                gradient.addColorStop(0.6, '#16213e');
+                gradient.addColorStop(1, '#0f0f23');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = '#333';
+                for (let i = 0; i < 4; i++) {
+                    const x = (i * canvas.width / 3) + 50;
+                    ctx.fillRect(x, 50, 30, canvas.height - 50);
+                    
+                    ctx.fillStyle = '#555';
+                    ctx.fillRect(x + 5, 50, 20, canvas.height - 50);
+                    ctx.fillStyle = '#333';
+                }
+                
+                ctx.fillStyle = '#8B0000';
+                ctx.fillRect(canvas.width / 4, GROUND_Y, canvas.width / 2, 100);
+                
+                ctx.fillStyle = '#FFD700';
+                for (let i = 0; i < 5; i++) {
+                    const y = GROUND_Y + 20 + (i * 15);
+                    ctx.fillRect(canvas.width / 4 + 20, y, canvas.width / 2 - 40, 3);
+                }
+            }
+            
+            ctx.fillStyle = '#2c2c54';
+            ctx.fillRect(0, GROUND_Y, canvas.width, canvas.height - GROUND_Y);
+        }
+        
+        const player1 = {
+            x: 150,
+            y: 0,
+            width: 0,
+            height: 0,
+            velocityY: 0,
+            health: 100,
+            maxHealth: 100,
+            isGrounded: true,
+            facing: 1,
+            punching: false,
+            punchCooldown: 0,
+            punchFrame: 0,
+            hitstun: 0,
+            isJumping: false
+        };
+        
+        const player2 = {
+            x: 500,
+            y: 0,
+            width: 0,
+            height: 0,
+            velocityY: 0,
+            health: 150,
+            maxHealth: 150,
+            isGrounded: true,
+            facing: -1,
+            punching: false,
+            punchCooldown: 0,
+            punchFrame: 0,
+            hitstun: 0,
+            isJumping: false,
+            aiState: 'idle',
+            aiTimer: 0,
+            lastPlayerDistance: 0,
+            comboCounter: 0,        // Track combo attacks
+            aggressionMode: false,  // Enhanced aggression state
+            lastAttackTime: 0       // Track attack timing
+        };
+        
+        document.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            keys[e.code] = false;
+        });
+        
+        function updatePlayer1() {
+            if (!gameRunning || player1.hitstun > 0) {
+                if (player1.hitstun > 0) player1.hitstun--;
+                return;
+            }
+            
+            if (keys['ArrowLeft'] && player1.x > 0) {
+                player1.x -= MOVE_SPEED;
+                player1.facing = -1;
+            }
+            if (keys['ArrowRight'] && player1.x < canvas.width - player1.width) {
+                player1.x += MOVE_SPEED;
+                player1.facing = 1;
+            }
+            
+            if (keys['ArrowUp'] && player1.isGrounded) {
+                player1.velocityY = JUMP_POWER;
+                player1.isGrounded = false;
+                player1.isJumping = true;
+            }
+            
+            if (keys['Space'] && player1.punchCooldown <= 0 && player1.isGrounded) {
+                player1.punching = true;
+                player1.punchCooldown = 20;
+                player1.punchFrame = 0;
+            }
+        }
+        
+        function updateAI() {
+            if (!gameRunning || player2.hitstun > 0) {
+                if (player2.hitstun > 0) player2.hitstun--;
+                return;
+            }
+            
+            const distanceToPlayer = Math.abs(player2.x - player1.x);
+            player2.aiTimer++;
+            
+            // Enhanced facing logic - more responsive
+            player2.facing = player2.x > player1.x ? -1 : 1;
+            
+            // ENHANCED AGGRESSION: Check if player is vulnerable
+            const playerVulnerable = player1.hitstun > 0 || player1.punchCooldown > 0 || !player1.isGrounded;
+            
+            // Enter aggression mode if player is vulnerable or health is low
+            if (playerVulnerable || player2.health < player2.maxHealth * 0.7) {
+                player2.aggressionMode = true;
+            }
+            
+            // Enhanced AI decision making with much faster reactions
+            switch (player2.aiState) {
+                case 'idle':
+                    if (player2.aiTimer > KILLMONGER_REACTION_TIME) {
+                        if (distanceToPlayer > 120) {
+                            player2.aiState = 'approach';
+                        } else if (distanceToPlayer < 150 && Math.random() > (1 - KILLMONGER_AGGRESSION)) {
+                            player2.aiState = 'attack';
+                        }
+                        player2.aiTimer = 0;
+                    }
+                    break;
+                    
+                case 'approach':
+                    // MUCH more aggressive approach - close distance quickly
+                    const approachSpeed = MOVE_SPEED * KILLMONGER_SPEED_MULTIPLIER;
+                    
+                    if (distanceToPlayer > 80) {
+                        if (player2.x > player1.x && player2.x > 0) {
+                            player2.x -= approachSpeed;
+                        } else if (player2.x < player1.x && player2.x < canvas.width - player2.width) {
+                            player2.x += approachSpeed;
+                        }
+                        
+                        // Aggressive jumping to close distance faster
+                        if (Math.random() > 0.99 && player2.isGrounded) {
+                            player2.velocityY = JUMP_POWER;
+                            player2.isGrounded = false;
+                            player2.isJumping = true;
+                        }
+                    } else {
+                        player2.aiState = 'attack';
+                        player2.aiTimer = 0;
+                    }
+                    break;
+                    
+                case 'attack':
+                    // ENHANCED ATTACK LOGIC - much more aggressive
+                    if (distanceToPlayer < 120 && player2.punchCooldown <= 0 && player2.isGrounded) {
+                        player2.punching = true;
+                        player2.punchCooldown = 20;  // Faster punching recovery
+                        player2.punchFrame = 0;
+                        player2.comboCounter++;
+                        player2.lastAttackTime = gameFrame;
+                        
+                        // COMBO SYSTEM: Chain attacks together
+                        if (player2.comboCounter < 3 && Math.random() < KILLMONGER_COMBO_CHANCE) {
+                            player2.aiState = 'combo';  // New combo state
+                        } else {
+                            player2.aiState = 'pressure';  // Keep pressure instead of retreating
+                            player2.comboCounter = 0;
+                        }
+                        player2.aiTimer = 0;
+                    } else if (player2.aiTimer > 25) {
+                        player2.aiState = 'approach';  // Go back to approach instead of idle
+                        player2.aiTimer = 0;
+                    }
+                    break;
+                    
+                case 'combo':
+                    // NEW: Rapid combo attacks
+                    if (player2.punchCooldown <= 0 && distanceToPlayer < 130) {
+                        player2.punching = true;
+                        player2.punchCooldown = 6;  // Even faster for combos
+                        player2.punchFrame = 0;
+                        player2.comboCounter++;
+                        
+                        if (player2.comboCounter >= 3 || Math.random() > KILLMONGER_COMBO_CHANCE) {
+                            player2.aiState = 'pressure';
+                            player2.comboCounter = 0;
+                        }
+                    } else if (player2.aiTimer > 15) {
+                        player2.aiState = 'approach';
+                        player2.comboCounter = 0;
+                    }
+                    break;
+                    
+                case 'pressure':
+                    // NEW: Maintain pressure instead of retreating
+                    if (player2.aiTimer < 10) {
+                        // Stay close and look for openings
+                        if (distanceToPlayer > 100) {
+                            const pressureSpeed = MOVE_SPEED * KILLMONGER_SPEED_MULTIPLIER * 0.8;
+                            if (player2.x > player1.x && player2.x > 0) {
+                                player2.x -= pressureSpeed;
+                            } else if (player2.x < player1.x && player2.x < canvas.width - player2.width) {
+                                player2.x += pressureSpeed;
+                            }
+                        }
+                        
+                        // Quick attack if player is vulnerable
+                        if (playerVulnerable && player2.punchCooldown <= 0 && distanceToPlayer < 100) {
+                            player2.aiState = 'attack';
+                        }
+                    } else {
+                        player2.aiState = 'approach';
+                        player2.aiTimer = 0;
+                    }
+                    break;
+                    
+                case 'retreat':
+                    // MODIFIED: Much shorter retreats, more aggressive
+                    if (player2.aiTimer < 8) {  // Reduced retreat time
+                        const retreatSpeed = MOVE_SPEED * KILLMONGER_SPEED_MULTIPLIER * 0.7;
+                        if (player2.x > player1.x && player2.x < canvas.width - player2.width) {
+                            player2.x += retreatSpeed;
+                        } else if (player2.x < player1.x && player2.x > 0) {
+                            player2.x -= retreatSpeed;
+                        }
+                    } else {
+                        player2.aiState = 'approach';  // Go straight back to approach
+                        player2.aiTimer = 0;
+                    }
+                    break;
+            }
+            
+            // ENHANCED: Predictive movement - try to cut off player escape routes
+            if (player2.aggressionMode && distanceToPlayer < 200) {
+                const playerMovingRight = keys['ArrowRight'];
+                const playerMovingLeft = keys['ArrowLeft'];
+                
+                // Predict where player is going and cut them off
+                if (playerMovingRight && player2.x < player1.x) {
+                    player2.x += MOVE_SPEED * KILLMONGER_SPEED_MULTIPLIER * 1.2;
+                } else if (playerMovingLeft && player2.x > player1.x) {
+                    player2.x -= MOVE_SPEED * KILLMONGER_SPEED_MULTIPLIER * 1.2;
+                }
+            }
+        }
+        
+        function updatePhysics(player) {
+            if (!player.isGrounded) {
+                player.velocityY += GRAVITY;
+                player.y += player.velocityY;
+                
+                if (player.y >= GROUND_Y - player.height) {
+                    player.y = GROUND_Y - player.height;
+                    player.velocityY = 0;
+                    player.isGrounded = true;
+                    player.isJumping = false;
+                }
+            }
+            
+            if (player.punchCooldown > 0) {
+                player.punchCooldown--;
+                player.punchFrame++;
+            }
+            
+            // Faster punch recovery for player 1, but Killmonger is still faster
+            const punchRecoveryThreshold = player === player2 ? 1 : 1;
+            if (player.punchCooldown <= punchRecoveryThreshold) {
+                player.punching = false;
+            }
+        }
+        
+        function checkPunchCollision() {
+            const player1Punching = player1.punching && player1.punchFrame >= 5 && player1.punchFrame <= 15;
+            const player2Punching = player2.punching && player2.punchFrame >= 5 && player2.punchFrame <= 15;
+        
+            if (player1Punching) {
+                let punchHitboxX;
+                const punchImage = characterSprites[selectedCharacter].punch;
+                const punchWidth = punchImage ? punchImage.width * CHARACTER_SCALE : 0;
+        
+                if (player1.facing === 1) {
+                    punchHitboxX = player1.x + player1.width;
+                    if (punchHitboxX > player2.x && player1.x < player2.x + player2.width) {
+                        if (Math.abs(player1.y - player2.y) < player1.height) {
+                            hitPlayer(player2, PUNCH_DAMAGE);
+                            player1.punchFrame = 20;
+                        }
+                    }
+                } else {
+                    punchHitboxX = player1.x - punchWidth;
+                    if (punchHitboxX < player2.x + player2.width && player1.x > player2.x) {
+                        if (Math.abs(player1.y - player2.y) < player1.height) {
+                            hitPlayer(player2, PUNCH_DAMAGE);
+                            player1.punchFrame = 20;
+                        }
+                    }
+                }
+            }
+            
+            if (player2Punching) {
+                let punchHitboxX;
+                const punchImage = killmongerSprites.punch;
+                const punchWidth = punchImage ? punchImage.width * CHARACTER_SCALE : 0;
+        
+                if (player2.facing === 1) {
+                    punchHitboxX = player2.x + player2.width;
+                    if (punchHitboxX > player1.x && player2.x < player1.x + player1.width) {
+                        if (Math.abs(player2.y - player1.y) < player2.height) {
+                            // ENHANCED: Killmonger does more damage
+                            hitPlayer(player1, KILLMONGER_PUNCH_DAMAGE);
+                            player2.punchFrame = 20;
+                        }
+                    }
+                } else {
+                    punchHitboxX = player2.x - punchWidth;
+                    if (punchHitboxX < player1.x + player1.width && player2.x > player1.x) {
+                        if (Math.abs(player2.y - player1.y) < player2.height) {
+                            // ENHANCED: Killmonger does more damage
+                            hitPlayer(player1, KILLMONGER_PUNCH_DAMAGE);
+                            player2.punchFrame = 20;
+                        }
+                    }
+                }
+            }
+        }
+        
+        function hitPlayer(player, damage) {
+            player.health = Math.max(0, player.health - damage);
+            
+            // ENHANCED: Reduced hitstun for Killmonger, increased for player
+            if (player === player1) {
+                player.hitstun = 12;  // Player gets more hitstun
+                player.x += player2.facing * 25;  // Bigger knockback
+            } else {
+                player.hitstun = 6;   // Killmonger recovers faster
+                player.x += player1.facing * 15;  // Less knockback for Killmonger
+            }
+            
+            player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+        }
+        
+        function drawPlayer(player, isPlayer1 = true) {
+            let currentSprite;
+            let characterSource = isPlayer1 ? characterSprites[selectedCharacter] : killmongerSprites;
+            const fixedWidth = 300;
+            const fixedHeight = 200;
+        
+            if (characterSource && Object.keys(characterSource).length > 0) {
+                if (player.punching) {
+                    currentSprite = characterSource.punch;
+                } else if (player.isJumping || !player.isGrounded) {
+                    currentSprite = characterSource.jump;
+                } else {
+                    currentSprite = characterSource.base;
+                }
+            }
+        
+            if (currentSprite) {
+                const scaledWidth = fixedWidth;
+                const scaledHeight = fixedHeight;
+        
+                player.width = scaledWidth;
+                player.height = scaledHeight;
+        
+                ctx.save();
+                
+                // Different flipping logic for Killmonger vs Hero
+                let shouldFlip;
+                if (isPlayer1) {
+                    // Hero: flip when facing left
+                    shouldFlip = player.facing === -1;
+                } else {
+                    // Killmonger: flip when facing right (opposite of hero)
+                    shouldFlip = player.facing === 1;
+                }
+                
+                if (shouldFlip) {
+                    ctx.scale(-1, 1);
+                    ctx.drawImage(currentSprite, -(player.x + scaledWidth), player.y, scaledWidth, scaledHeight);
+                } else {
+                    ctx.drawImage(currentSprite, player.x, player.y, scaledWidth, scaledHeight);
+                }
+                
+                // Enhanced visual effects for Killmonger in aggression mode
+                if (!isPlayer1 && player2.aggressionMode) {
+                    ctx.fillStyle = 'rgba(255, 0, 0, 0.1)';
+                    ctx.fillRect(player.x - 10, player.y - 10, scaledWidth + 20, scaledHeight + 20);
+                }
+                
+                ctx.restore();
+            } else {
+                drawFallbackPlayer(player, isPlayer1);
+            }
+        }
+        
+        function drawFallbackPlayer(player, isPlayer1) {
+            player.width = 80 * CHARACTER_SCALE;
+            player.height = 80 * CHARACTER_SCALE;
+            player.y = GROUND_Y - player.height;
+        
+            ctx.save();
+            
+            if (player.facing === -1) {
+                ctx.scale(-1, 1);
+                ctx.translate(-player.x - player.width, 0);
+            } else {
+                ctx.translate(player.x, 0);
+            }
+            
+            if (isPlayer1) {
+                let baseColor = '#DC143C';
+                let accentColor = '#4169E1';
+                
+                if (selectedCharacter) {
+                    const colorMap = {
+                        'spider_shaheezy': { base: '#DC143C', accent: '#0066CC' },
+                        'ironman': { base: '#FFD700', accent: '#DC143C' },
+                        'captain_america': { base: '#0066CC', accent: '#DC143C' },
+                        'thor': { base: '#FFD700', accent: '#8B0000' },
+                        'hulk': { base: '#228B22', accent: '#32CD32' },
+                        'black_widow': { base: '#2F2F2F', accent: '#DC143C' },
+                        'black_panther': { base: '#2F2F2F', accent: '#8A2BE2' }
+                    };
+                    
+                    if (colorMap[selectedCharacter]) {
+                        baseColor = colorMap[selectedCharacter].base;
+                        accentColor = colorMap[selectedCharacter].accent;
+                    }
+                }
+                
+                ctx.fillStyle = player.hitstun > 0 ? '#fff' : baseColor;
+                ctx.fillRect(0, player.y, player.width, player.height);
+                
+                ctx.fillStyle = accentColor;
+                ctx.fillRect(10, player.y + 10, 20, 20);
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(15, player.y + 15, 10, 10);
+                
+                if (selectedCharacter === 'falcon' || selectedCharacter === 'hawkeye') {
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(-10, player.y + 20, 15, 30);
+                    ctx.fillRect(player.width - 5, player.y + 20, 15, 30);
+                }
+            } else {
+                // Enhanced Killmonger appearance
+                let killmongerColor = player.hitstun > 0 ? '#fff' : '#2F2F2F';
+                if (player2.aggressionMode) {
+                    killmongerColor = '#4A0000';  // Darker red when aggressive
+                }
+                
+                ctx.fillStyle = killmongerColor;
+                ctx.fillRect(0, player.y, player.width, player.height);
+                
+                ctx.fillStyle = '#FFD700';
+                ctx.fillRect(5, player.y + 5, player.width - 10, 8);
+                ctx.fillRect(20, player.y + 20, 40, 6);
+                
+                ctx.fillStyle = '#FFD700';
+                ctx.fillRect(15, player.y - 10, 50, 12);
+                ctx.fillRect(25, player.y - 18, 30, 8);
+            }
+            
+            ctx.fillStyle = 'red';
+            ctx.fillRect(20, player.y + 15, 6, 6);
+            ctx.fillRect(35, player.y + 15, 6, 6);
+            
+            ctx.restore();
+        }
+        
+        function drawHealthBar(player) {
+            const barWidth = player.width;
+            const barHeight = 8;
+            const barX = player.x;
+            const barY = player.y - 20;
+            
+            ctx.fillStyle = '#333';
+            ctx.fillRect(barX, barY, barWidth, barHeight);
+            
+            const healthPercent = player.health / player.maxHealth;
+            ctx.fillStyle = healthPercent > 0.6 ? '#2ed573' : 
+                          healthPercent > 0.3 ? '#ffa502' : '#ff4757';
+            ctx.fillRect(barX, barY, barWidth * healthPercent, barHeight);
+            
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(barX, barY, barWidth, barHeight);
+        }
+        
+        function updateHUD() {
+            const p1HealthPercent = (player1.health / player1.maxHealth) * 100;
+            document.getElementById('player1Health').style.width = p1HealthPercent + '%';
+            document.getElementById('player1HealthText').textContent = player1.health + ' HP';
+            
+            const p2HealthPercent = (player2.health / player2.maxHealth) * 100;
+            document.getElementById('player2Health').style.width = p2HealthPercent + '%';
+            document.getElementById('player2HealthText').textContent = player2.health + ' HP';
+        }
+        
+        function checkGameOver() {
+            if (player1.health <= 0) {
+                gameRunning = false;
+                document.getElementById('winnerText').textContent = 'KILLMONGER WINS!';
+                document.getElementById('gameOver').style.display = 'block';
+            } else if (player2.health <= 0) {
+                gameRunning = false;
+                const characterName = selectedCharacter ? formatCharacterName(selectedCharacter) : 'HERO';
+                document.getElementById('winnerText').textContent = characterName + ' WINS!';
+                document.getElementById('gameOver').style.display = 'block';
+            }
+        }
+        
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            gameFrame++;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            drawBackground();
+            
+            updatePlayer1();
+            updateAI();
+            updatePhysics(player1);
+            updatePhysics(player2);
+            checkPunchCollision();
+            
+            drawPlayer(player1, true);
+            drawPlayer(player2, false);
+            
+            drawHealthBar(player1);
+            drawHealthBar(player2);
+            
+            updateHUD();
+            checkGameOver();
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function initializeGame() {
+            gameRunning = true;
+            gameFrame = 0;
+            
+            // Fixed dimensions for consistent gameplay
+            const playerWidth = 300;
+            const playerHeight = 200;
+        
+            // Initialize player 1 (hero)
+            player1.x = 150;
+            player1.width = playerWidth;
+            player1.height = playerHeight;
+            player1.y = GROUND_Y - player1.height;
+            player1.velocityY = 0;
+            player1.health = 100;
+            player1.isGrounded = true;
+            player1.facing = 1;
+            player1.punching = false;
+            player1.punchCooldown = 0;
+            player1.punchFrame = 0;
+            player1.hitstun = 0;
+            player1.isJumping = false;
+            
+            // Initialize player 2 (Enhanced Killmonger)
+            player2.x = 500;
+            player2.width = playerWidth;
+            player2.height = playerHeight;
+            player2.y = GROUND_Y - player2.height;
+            player2.velocityY = 0;
+            player2.health = 150;
+            player2.isGrounded = true;
+            player2.facing = -1;
+            player2.punching = false;
+            player2.punchCooldown = 0;
+            player2.punchFrame = 0;
+            player2.hitstun = 0;
+            player2.isJumping = false;
+            player2.aiState = 'approach';  // Start aggressive
+            player2.aiTimer = 0;
+            player2.comboCounter = 0;
+            player2.aggressionMode = false;  // Start in aggression mode
+            player2.lastAttackTime = 0;
+            
+            gameLoop();
+        }
+        
+        function restartGame() {
+            document.getElementById('gameOver').style.display = 'none';
+            initializeGame();
+        }
+    </script>
+</body>
+</html>
