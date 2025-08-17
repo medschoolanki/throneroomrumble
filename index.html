@@ -409,8 +409,8 @@
         
         async function detectCharacters() {
             const commonCharacters = [
-                'spider_shaheezy', 'ironman', 'captain_america', 'thor', 'hulk', 
-                'black_widow', 'hawkeye', 'falcon', 'winter_soldier', 'ant_man',
+                'spider_shaheezy', 'spider_aamir', 'dilectric', 'old_man_aati', 'loki_kahani_wala', 
+                'chipool', 'boston_ghost_rider', 'jarvitron', 'winter_soldier', 'ant_man',
                 'doctor_strange', 'scarlet_witch', 'vision', 'captain_marvel',
                 'black_panther', 'general_khan', 'character1', 'character2', 'character3'
             ];
@@ -493,13 +493,13 @@
         function getCharacterDescription(characterName) {
             const descriptions = {
                 'spider_shaheezy': 'Peter Parker, your friendly neighborhood hero.<br>Web-slinging wall-crawler with spider-sense.',
-                'ironman': 'Tony Stark, genius billionaire inventor.<br>High-tech armor with repulsors and flight.',
-                'captain_america': 'Steve Rogers, the First Avenger.<br>Super soldier with vibranium shield.',
-                'thor': 'God of Thunder from Asgard.<br>Wields the mighty hammer Mjolnir.',
-                'hulk': 'Bruce Banner\'s gamma-powered alter ego.<br>Incredible strength when angry.',
-                'black_widow': 'Natasha Romanoff, master spy.<br>Expert in combat and espionage.',
-                'hawkeye': 'Clint Barton, master archer.<br>Never misses his target.',
-                'falcon': 'Sam Wilson, high-flying hero.<br>Military training with wing suit.',
+                'spider_aamir': 'The Houston Spider-Man, packing a punch.',
+                'dilectric': 'Dilectric, the Dil Wala with the electric touch!',
+                'old_man_aati': 'Old Man Aati, adamantium and rage powered',
+                'loki_kahani_wala': 'Loki the Kahani Wala, master of stories and tricks',
+                'chipool': 'Natasha Romanoff, master spy.<br>Expert in combat and espionage.',
+                'boston_ghost_rider': 'Clint Barton, master archer.<br>Never misses his target.',
+                'jarvitron': 'An empty suit full of tech. The true mastermind',
                 'black_panther': 'T\'Challa, King of Wakanda.<br>Vibranium suit and enhanced abilities.',
                 'general_khan': 'Elite military commander.<br>Strategic genius and combat expert.',
                 'default': 'A powerful hero ready for battle.<br>Unique abilities and fighting style.'
@@ -1193,12 +1193,13 @@
                 if (selectedCharacter) {
                     const colorMap = {
                         'spider_shaheezy': { base: '#DC143C', accent: '#0066CC' },
-                        'ironman': { base: '#FFD700', accent: '#DC143C' },
-                        'captain_america': { base: '#0066CC', accent: '#DC143C' },
-                        'thor': { base: '#FFD700', accent: '#8B0000' },
-                        'hulk': { base: '#228B22', accent: '#32CD32' },
-                        'black_widow': { base: '#2F2F2F', accent: '#DC143C' },
-                        'black_panther': { base: '#2F2F2F', accent: '#8A2BE2' }
+                        'spider_aamir': { base: '#FFD700', accent: '#DC143C' },
+                        'dilectric': { base: '#0066CC', accent: '#DC143C' },
+                        'old_man_aati': { base: '#FFD700', accent: '#8B0000' },
+                        'loki_kahani_wala': { base: '#228B22', accent: '#32CD32' },
+                        'chipool': { base: '#2F2F2F', accent: '#DC143C' },
+                        'boston_ghost_rider': { base: '#2F2F2F', accent: '#8A2BE2' },
+                        'jarvitron': { base: '#0066CC', accent: '#DC143C' }
                     };
                     
                     if (colorMap[selectedCharacter]) {
